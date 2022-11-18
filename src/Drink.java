@@ -1,10 +1,10 @@
-import java.util.ArrayList;
+import java.io.InputStream;
 import java.util.Comparator;
+import java.util.Scanner;
 
 public class Drink implements Comparable<Drink>{
     private int volume;
     private double price;
-
     private String name;
     private String receipt;
 
@@ -19,13 +19,21 @@ public class Drink implements Comparable<Drink>{
         this(0, 0, "null", "null");
     }
 
-    public double getVolume() {
+    public int getVolume() {
         return volume;
     }
 
     public void setVolume(int volume) {
         if(volume >= 0) this.volume = volume;
         else System.out.println("Объем не может быть меньше нуля.");
+    }
+
+    // перегрузка сеттера, если мы в него передаем поток InputStream
+    // запрашивает вводимые данные через этот поток
+    public void setVolume(InputStream stream) {
+        Scanner scanner = new Scanner(stream);
+        System.out.println("Введите объем: ");
+        if(scanner.hasNextInt()) this.setVolume(scanner.nextInt());
     }
 
     public double getPrice() {
@@ -36,6 +44,13 @@ public class Drink implements Comparable<Drink>{
         if(price >= 0) this.price = price;
         else System.out.println("Цена не может быть меньше нуля.");
     }
+    // перегрузка сеттера, если мы в него передаем поток InputStream
+    // запрашивает вводимые данные через этот поток
+    public void setPrice(InputStream stream) {
+        Scanner scanner = new Scanner(stream);
+        System.out.println("Введите цену: ");
+        if(scanner.hasNextDouble()) this.setPrice(scanner.nextDouble());
+    }
 
     public String getName() {
         return name;
@@ -44,6 +59,14 @@ public class Drink implements Comparable<Drink>{
     public void setName(String name) {
         this.name = name;
     }
+    // перегрузка сеттера, если мы в него передаем поток InputStream
+    // запрашивает вводимые данные через этот поток
+    public void setName(InputStream stream) {
+        Scanner scanner = new Scanner(stream);
+        System.out.println("Введите введите название напитка: ");
+        this.setName(scanner.nextLine());
+    }
+
 
     public String getReceipt() {
         return receipt;
@@ -53,7 +76,26 @@ public class Drink implements Comparable<Drink>{
         this.receipt = receipt;
     }
 
-    private String portionSize() {
+    // перегрузка сеттера, если мы в него передаем поток InputStream
+    // запрашивает вводимые данные через этот поток
+    public void setReceipt(InputStream stream) {
+        Scanner scanner = new Scanner(stream);
+        System.out.println("Введите рецепт:");
+//        scanner.skip("\n");
+        String buffer = "";
+        boolean isWork = true;
+        do {
+            String bufferForCheck = scanner.nextLine();
+            buffer = String.format("%s\n%s", buffer, bufferForCheck);
+            if (bufferForCheck.equals("") && buffer.length() != 0) {
+                System.out.println(buffer);
+                isWork = false;
+            }
+        } while (isWork);
+        this.setReceipt(buffer);
+    }
+
+    private String portionSize() { // пользовательская функция определния объема
         String portion;
         if(volume >= 300) portion = "Large";
         else if (volume >= 100) portion = "Medium";
@@ -62,7 +104,7 @@ public class Drink implements Comparable<Drink>{
     }
 
     @Override
-    public String toString() {
+    public String toString() { // при преобразовании всего объекта в string
         return "Drink{" +
                 "volume=" + volume +
                 ", price=" + price +
@@ -72,36 +114,16 @@ public class Drink implements Comparable<Drink>{
     }
 
     @Override
-    public int compareTo(Drink drinkObj) {
+    public int compareTo(Drink drinkObj) { //реализация сортировки по любому полю
         return Comparators.NAME.compare(this, drinkObj);
     }
 
 
     public static class Comparators {
 
-        public static Comparator<Drink> NAME = new Comparator<Drink>() {
-            @Override
-            public int compare(Drink obj1, Drink obj2) {
-                return obj1.name.compareTo(obj2.name);
-            }
-        };
-        public static Comparator<Drink> RECEIPT = new Comparator<Drink>() {
-            @Override
-            public int compare(Drink obj1, Drink obj2) {
-                return obj1.receipt.compareTo(obj2.receipt);
-            }
-        };
-        public static Comparator<Drink> PRICE = new Comparator<Drink>() {
-            @Override
-            public int compare(Drink obj1, Drink obj2) {
-                return (int) (obj1.price - obj2.price);
-            }
-        };
-        public static Comparator<Drink> VOLUME = new Comparator<Drink>() {
-            @Override
-            public int compare(Drink obj1, Drink obj2) {
-                return obj1.volume - obj2.volume;
-            }
-        };
+        public static Comparator<Drink> NAME = Comparator.comparing(obj -> obj.name); // по полю NAME
+        public static Comparator<Drink> RECEIPT = Comparator.comparingInt(obj -> obj.receipt.length()); // Receipt
+        public static Comparator<Drink> PRICE = (obj1, obj2) -> (int) (obj1.price - obj2.price); // PRICE
+        public static Comparator<Drink> VOLUME = Comparator.comparingInt(obj -> obj.volume); // volume
     }
 }
